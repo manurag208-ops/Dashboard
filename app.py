@@ -2,17 +2,28 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Page config
-st.set_page_config(page_title="Dashboard", layout="wide")
+# -----------------------------
+# Page Config
+# -----------------------------
+st.set_page_config(page_title="Food Fortification Dashboard", layout="wide")
 
+# -----------------------------
 # Title
-st.title("📊 Food Fortification Dashboard")
+# -----------------------------
+st.title("📊 Food Fortification & Anaemia Reduction Dashboard")
 
-# Load data
+# -----------------------------
+# Load Data
+# -----------------------------
 df = pd.read_csv("data.csv")
 
-# Sidebar filters
-st.sidebar.header("🔍 Filters")
+# Clean column names
+df.columns = df.columns.str.strip()
+
+# -----------------------------
+# Sidebar Filters
+# -----------------------------
+st.sidebar.header("🔍 Filter Data")
 
 region = st.sidebar.multiselect(
     "Select Region",
@@ -26,30 +37,80 @@ month = st.sidebar.multiselect(
     default=df["Month"].unique()
 )
 
-# Filter data
 filtered_df = df[
     (df["Region"].isin(region)) &
     (df["Month"].isin(month))
 ]
 
-# KPIs
-col1, col2, col3 = st.columns(3)
+# -----------------------------
+# KPI SECTION
+# -----------------------------
+st.subheader("📌 Key Performance Indicators")
 
-col1.metric("Total Mills", filtered_df["Mills"].sum())
-col2.metric("Avg Compliance", round(filtered_df["Compliance"].mean(), 2))
-col3.metric("Total Reduction", filtered_df["Reduction"].sum())
+col1, col2, col3, col4 = st.columns(4)
 
-# Charts
-st.subheader("📈 Compliance Trend")
-fig1 = px.line(filtered_df, x="Month", y="Compliance", color="Region", markers=True)
+col1.metric("Total Mills", int(filtered_df["Mills"].sum()))
+col2.metric("Avg Compliance (%)", round(filtered_df["Compliance (%)"].mean(), 1))
+col3.metric("Avg Iron (ppm)", round(filtered_df["Iron ppm"].mean(), 1))
+col4.metric("Avg Anaemia Reduction (%)", round(filtered_df["Anaemia Reduction (%)"].mean(), 1))
+
+# -----------------------------
+# CHART 1: Compliance Trend
+# -----------------------------
+st.subheader("📈 Monthly Compliance Trend")
+
+fig1 = px.line(
+    filtered_df,
+    x="Month",
+    y="Compliance (%)",
+    color="Region",
+    markers=True
+)
 st.plotly_chart(fig1, use_container_width=True)
 
-st.subheader("📊 Mills by Region")
-fig2 = px.bar(filtered_df, x="Region", y="Mills", color="Region")
+# -----------------------------
+# CHART 2: Anaemia Reduction
+# -----------------------------
+st.subheader("📊 Anaemia Reduction by Region")
+
+fig2 = px.bar(
+    filtered_df,
+    x="Region",
+    y="Anaemia Reduction (%)",
+    color="Region"
+)
 st.plotly_chart(fig2, use_container_width=True)
 
-# Table
-st.subheader("📋 Data Table")
+# -----------------------------
+# CHART 3: Iron vs Reduction (INSIGHT CHART)
+# -----------------------------
+st.subheader("🔬 Iron vs Anaemia Reduction (Impact Analysis)")
+
+fig3 = px.scatter(
+    filtered_df,
+    x="Iron ppm",
+    y="Anaemia Reduction (%)",
+    color="Region",
+    size="Mills",
+    hover_data=["Month"]
+)
+st.plotly_chart(fig3, use_container_width=True)
+
+# -----------------------------
+# TABLE
+# -----------------------------
+st.subheader("📋 Full Dataset")
 st.dataframe(filtered_df)
 
-st.success("✅ Dashboard Ready for Presentation!")
+# -----------------------------
+# INSIGHTS (AUTO GENERATED)
+# -----------------------------
+st.subheader("🧠 Key Insights")
+
+highest_compliance = filtered_df.loc[filtered_df["Compliance (%)"].idxmax()]
+lowest_compliance = filtered_df.loc[filtered_df["Compliance (%)"].idxmin()]
+
+st.write(f"✅ Highest compliance observed in **{highest_compliance['Region']} ({highest_compliance['Month']})**")
+st.write(f"⚠️ Lowest compliance observed in **{lowest_compliance['Region']} ({lowest_compliance['Month']})**")
+
+st.success("🚀 Dashboard Ready for Policy Presentation")
