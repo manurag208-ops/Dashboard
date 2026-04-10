@@ -121,14 +121,14 @@ if not filtered_df.empty:
     avg_red = round(filtered_df["Anaemia"].mean(), 1)
 
     st.markdown(f"""
-    ### 📌 Key Findings:
+    ### Key Findings:
     
     - ✅ Highest compliance in **{high['Region']} ({high['Month']})**
     - ⚠️ Lowest compliance in **{low['Region']} ({low['Month']})**
     - 📊 Average compliance is **{avg_comp}%**
     - ❤️ Average anaemia reduction is **{avg_red}%**
     
-    ### 🎯 Policy Interpretation:
+    ### Policy Interpretation:
     
     - Regions with higher compliance show **better anaemia reduction outcomes**
     - Iron fortification appears to have a **positive correlation with health impact**
