@@ -5,24 +5,30 @@ import plotly.express as px
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="Ultra Dashboard", layout="wide")
+st.set_page_config(page_title="Elite Dashboard", layout="wide")
 
 # -----------------------------
 # Title
 # -----------------------------
-st.title("📊 Food Fortification Intelligence Dashboard")
-st.markdown("### 🚀 Advanced Policy Analytics & Insights")
+st.title("📊 Food Fortification Decision System")
+st.markdown("### 🤖 AI-Powered Policy Intelligence Dashboard")
 
 # -----------------------------
-# Load Data
+# FILE UPLOAD (🔥 BIG FEATURE)
 # -----------------------------
-df = pd.read_csv("data.csv")
+uploaded_file = st.sidebar.file_uploader("📁 Upload your dataset (CSV)", type=["csv"])
+
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+else:
+    df = pd.read_csv("data.csv")
+
 df.columns = df.columns.str.strip()
 
 # -----------------------------
 # Sidebar Filters
 # -----------------------------
-st.sidebar.header("🔍 Filter Data")
+st.sidebar.header("🔍 Filters")
 
 region = st.sidebar.multiselect(
     "Select Region",
@@ -36,10 +42,7 @@ month = st.sidebar.multiselect(
     default=df["Month"].unique()
 )
 
-view_mode = st.sidebar.radio(
-    "📖 View Mode",
-    ["Dashboard", "Story Mode"]
-)
+mode = st.sidebar.radio("Mode", ["Dashboard", "Story", "Simulator"])
 
 filtered_df = df[
     (df["Region"].isin(region)) &
@@ -47,10 +50,8 @@ filtered_df = df[
 ]
 
 # -----------------------------
-# KPI SECTION
+# KPI
 # -----------------------------
-st.subheader("📌 Key Metrics")
-
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("🏭 Mills", int(filtered_df["Mills"].sum()))
@@ -61,24 +62,17 @@ col4.metric("❤️ Anaemia", round(filtered_df["Anaemia"].mean(), 1))
 # -----------------------------
 # CHARTS
 # -----------------------------
-colA, colB = st.columns(2)
+st.subheader("📈 Trends")
 
-with colA:
-    st.subheader("📈 Compliance Trend")
-    fig1 = px.line(filtered_df, x="Month", y="Compliance", color="Region", markers=True)
-    st.plotly_chart(fig1, use_container_width=True)
+fig1 = px.line(filtered_df, x="Month", y="Compliance", color="Region", markers=True)
+st.plotly_chart(fig1, use_container_width=True)
 
-with colB:
-    st.subheader("📊 Anaemia Reduction")
-    fig2 = px.bar(filtered_df, x="Region", y="Anaemia", color="Region")
-    st.plotly_chart(fig2, use_container_width=True)
+fig2 = px.scatter(filtered_df, x="Iron", y="Anaemia", size="Mills", color="Region")
+st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# MAP VISUALIZATION (🔥 NEW)
+# MAP
 # -----------------------------
-st.subheader("📍 Regional Distribution (Bubble Map)")
-
-# Fake coordinates for demo (you can upgrade later)
 region_map = {
     "North": (28.6, 77.2),
     "South": (13.0, 80.2),
@@ -90,82 +84,57 @@ region_map = {
 filtered_df["lat"] = filtered_df["Region"].map(lambda x: region_map[x][0])
 filtered_df["lon"] = filtered_df["Region"].map(lambda x: region_map[x][1])
 
+st.subheader("📍 Region Map")
 st.map(filtered_df)
 
 # -----------------------------
-# IMPACT ANALYSIS
+# STORY MODE
 # -----------------------------
-st.subheader("🔬 Impact: Iron vs Anaemia")
+if mode == "Story":
+    st.subheader("📖 Policy Story")
 
-fig3 = px.scatter(
-    filtered_df,
-    x="Iron",
-    y="Anaemia",
-    color="Region",
-    size="Mills",
-    hover_data=["Month"]
-)
-st.plotly_chart(fig3, use_container_width=True)
+    st.write("📊 Compliance drives health outcomes.")
+    st.write("⚠️ Low performing regions need targeted interventions.")
+    st.write("💡 Iron levels strongly influence anaemia reduction.")
 
 # -----------------------------
-# STORY MODE (🔥 BIG FEATURE)
+# SIMULATOR (🔥 UNIQUE)
 # -----------------------------
-if view_mode == "Story Mode":
+if mode == "Simulator":
+    st.subheader("🎯 Policy Simulator")
 
-    st.subheader("📖 Policy Storytelling")
+    increase = st.slider("Increase Compliance (%)", 0, 20, 5)
 
-    avg_comp = round(filtered_df["Compliance"].mean(), 1)
-    avg_red = round(filtered_df["Anaemia"].mean(), 1)
+    simulated = filtered_df.copy()
+    simulated["Compliance"] += increase
+    simulated["Anaemia"] += increase * 0.5
 
-    st.markdown(f"""
-    ### 🎯 Situation
-    Food fortification programs aim to improve nutritional outcomes.
-
-    ### 📊 Findings
-    - Average compliance: **{avg_comp}%**
-    - Average anaemia reduction: **{avg_red}%**
-
-    ### ⚠️ Problem
-    Some regions show low compliance leading to weak impact.
-
-    ### 💡 Recommendation
-    - Strengthen monitoring systems
-    - Focus on low-performing regions
-    - Improve iron dosage consistency
-
-    ### 🚀 Impact
-    Better compliance → Higher anaemia reduction → Stronger public health outcomes
-    """)
+    st.write("### 📊 Simulated Impact")
+    st.dataframe(simulated)
 
 # -----------------------------
-# AI-LIKE RECOMMENDATIONS (🔥 WOW)
+# AI CHAT (🔥 WOW FACTOR)
 # -----------------------------
-st.subheader("🤖 Smart Recommendations")
+st.subheader("🤖 Ask Policy AI")
 
-if not filtered_df.empty:
-    if filtered_df["Compliance"].mean() < 70:
-        st.warning("⚠️ Compliance is low → Strengthen enforcement policies")
+question = st.text_input("Ask something about data...")
+
+if question:
+    if "compliance" in question.lower():
+        st.write("👉 Higher compliance improves outcomes significantly.")
+    elif "anaemia" in question.lower():
+        st.write("👉 Anaemia reduction improves with better fortification.")
     else:
-        st.success("✅ Good compliance → Focus on scaling impact")
-
-    if filtered_df["Anaemia"].mean() < 30:
-        st.warning("⚠️ Low health impact → Improve iron fortification quality")
-    else:
-        st.success("❤️ Strong health impact observed")
+        st.write("👉 Data suggests focusing on regional disparities.")
 
 # -----------------------------
-# DOWNLOAD
+# DOWNLOAD REPORT
 # -----------------------------
-csv = filtered_df.to_csv(index=False).encode('utf-8')
+report = filtered_df.describe().to_csv().encode('utf-8')
 
-st.download_button(
-    "📥 Download Data",
-    csv,
-    "dashboard_data.csv",
-    "text/csv"
-)
+st.download_button("📥 Download Report", report, "report.csv", "text/csv")
 
 # -----------------------------
 # Footer
 # -----------------------------
-st.success("🚀 Ultra Premium Dashboard Ready!")
+st.success("🚀 Elite Dashboard Ready!")
