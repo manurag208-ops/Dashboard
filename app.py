@@ -17,7 +17,7 @@ st.title("📊 Food Fortification & Anaemia Reduction Dashboard")
 # -----------------------------
 df = pd.read_csv("data.csv")
 
-# Clean column names
+# Clean column names (important fix)
 df.columns = df.columns.str.strip()
 
 # -----------------------------
@@ -37,6 +37,7 @@ month = st.sidebar.multiselect(
     default=df["Month"].unique()
 )
 
+# Apply filters
 filtered_df = df[
     (df["Region"].isin(region)) &
     (df["Month"].isin(month))
@@ -50,9 +51,9 @@ st.subheader("📌 Key Performance Indicators")
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("Total Mills", int(filtered_df["Mills"].sum()))
-col2.metric("Avg Compliance (%)", round(filtered_df["Compliance (%)"].mean(), 1))
+col2.metric("Avg Compliance", round(filtered_df["Compliance"].mean(), 1))
 col3.metric("Avg Iron (ppm)", round(filtered_df["Iron ppm"].mean(), 1))
-col4.metric("Avg Anaemia Reduction (%)", round(filtered_df["Anaemia Reduction (%)"].mean(), 1))
+col4.metric("Avg Anaemia Reduction", round(filtered_df["Anaemia Reduction"].mean(), 1))
 
 # -----------------------------
 # CHART 1: Compliance Trend
@@ -62,7 +63,7 @@ st.subheader("📈 Monthly Compliance Trend")
 fig1 = px.line(
     filtered_df,
     x="Month",
-    y="Compliance (%)",
+    y="Compliance",
     color="Region",
     markers=True
 )
@@ -76,20 +77,20 @@ st.subheader("📊 Anaemia Reduction by Region")
 fig2 = px.bar(
     filtered_df,
     x="Region",
-    y="Anaemia Reduction (%)",
+    y="Anaemia Reduction",
     color="Region"
 )
 st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# CHART 3: Iron vs Reduction (INSIGHT CHART)
+# CHART 3: Iron vs Reduction
 # -----------------------------
 st.subheader("🔬 Iron vs Anaemia Reduction (Impact Analysis)")
 
 fig3 = px.scatter(
     filtered_df,
     x="Iron ppm",
-    y="Anaemia Reduction (%)",
+    y="Anaemia Reduction",
     color="Region",
     size="Mills",
     hover_data=["Month"]
@@ -103,14 +104,17 @@ st.subheader("📋 Full Dataset")
 st.dataframe(filtered_df)
 
 # -----------------------------
-# INSIGHTS (AUTO GENERATED)
+# INSIGHTS
 # -----------------------------
 st.subheader("🧠 Key Insights")
 
-highest_compliance = filtered_df.loc[filtered_df["Compliance (%)"].idxmax()]
-lowest_compliance = filtered_df.loc[filtered_df["Compliance (%)"].idxmin()]
+highest = filtered_df.loc[filtered_df["Compliance"].idxmax()]
+lowest = filtered_df.loc[filtered_df["Compliance"].idxmin()]
 
-st.write(f"✅ Highest compliance observed in **{highest_compliance['Region']} ({highest_compliance['Month']})**")
-st.write(f"⚠️ Lowest compliance observed in **{lowest_compliance['Region']} ({lowest_compliance['Month']})**")
+st.write(f"✅ Highest compliance: **{highest['Region']} ({highest['Month']})**")
+st.write(f"⚠️ Lowest compliance: **{lowest['Region']} ({lowest['Month']})**")
 
-st.success("🚀 Dashboard Ready for Policy Presentation")
+# -----------------------------
+# Footer
+# -----------------------------
+st.success("🚀 Dashboard Ready for Presentation!")
