@@ -1,22 +1,23 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from openai import OpenAI
 
 # -----------------------------
 # Page Config
 # -----------------------------
-st.set_page_config(page_title="Elite Dashboard", layout="wide")
+st.set_page_config(page_title="Policy Intelligence System", layout="wide")
 
 # -----------------------------
 # Title
 # -----------------------------
-st.title("📊 Food Fortification Decision System")
-st.markdown("### 🤖 AI-Powered Policy Intelligence Dashboard")
+st.title("📊 Food Fortification Intelligence Dashboard")
+st.markdown("### 🤖 AI-Powered Policy Analysis & Decision System")
 
 # -----------------------------
-# FILE UPLOAD (🔥 BIG FEATURE)
+# Load Data (Upload option)
 # -----------------------------
-uploaded_file = st.sidebar.file_uploader("📁 Upload your dataset (CSV)", type=["csv"])
+uploaded_file = st.sidebar.file_uploader("📁 Upload CSV", type=["csv"])
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
@@ -50,8 +51,10 @@ filtered_df = df[
 ]
 
 # -----------------------------
-# KPI
+# KPI Section
 # -----------------------------
+st.subheader("📌 Key Metrics")
+
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("🏭 Mills", int(filtered_df["Mills"].sum()))
@@ -60,19 +63,27 @@ col3.metric("🧪 Iron", round(filtered_df["Iron"].mean(), 1))
 col4.metric("❤️ Anaemia", round(filtered_df["Anaemia"].mean(), 1))
 
 # -----------------------------
-# CHARTS
+# Charts
 # -----------------------------
 st.subheader("📈 Trends")
 
 fig1 = px.line(filtered_df, x="Month", y="Compliance", color="Region", markers=True)
 st.plotly_chart(fig1, use_container_width=True)
 
-fig2 = px.scatter(filtered_df, x="Iron", y="Anaemia", size="Mills", color="Region")
+fig2 = px.scatter(
+    filtered_df,
+    x="Iron",
+    y="Anaemia",
+    size="Mills",
+    color="Region"
+)
 st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# MAP
+# Map Visualization
 # -----------------------------
+st.subheader("📍 Region Map")
+
 region_map = {
     "North": (28.6, 77.2),
     "South": (13.0, 80.2),
@@ -81,60 +92,97 @@ region_map = {
     "Central": (23.2, 77.4)
 }
 
-filtered_df["lat"] = filtered_df["Region"].map(lambda x: region_map[x][0])
-filtered_df["lon"] = filtered_df["Region"].map(lambda x: region_map[x][1])
+filtered_df["lat"] = filtered_df["Region"].map(lambda x: region_map.get(x, (0,0))[0])
+filtered_df["lon"] = filtered_df["Region"].map(lambda x: region_map.get(x, (0,0))[1])
 
-st.subheader("📍 Region Map")
 st.map(filtered_df)
 
 # -----------------------------
-# STORY MODE
-# -----------------------------
-if mode == "Story":
-    st.subheader("📖 Policy Story")
-
-    st.write("📊 Compliance drives health outcomes.")
-    st.write("⚠️ Low performing regions need targeted interventions.")
-    st.write("💡 Iron levels strongly influence anaemia reduction.")
-
-# -----------------------------
-# SIMULATOR (🔥 UNIQUE)
+# Simulator
 # -----------------------------
 if mode == "Simulator":
     st.subheader("🎯 Policy Simulator")
 
     increase = st.slider("Increase Compliance (%)", 0, 20, 5)
 
-    simulated = filtered_df.copy()
-    simulated["Compliance"] += increase
-    simulated["Anaemia"] += increase * 0.5
+    sim_df = filtered_df.copy()
+    sim_df["Compliance"] += increase
+    sim_df["Anaemia"] += increase * 0.5
 
-    st.write("### 📊 Simulated Impact")
-    st.dataframe(simulated)
+    st.write("### Simulated Outcome")
+    st.dataframe(sim_df)
 
 # -----------------------------
-# AI CHAT (🔥 WOW FACTOR)
+# Story Mode
 # -----------------------------
-st.subheader("🤖 Ask Policy AI")
+if mode == "Story":
+    st.subheader("📖 Policy Story")
 
-question = st.text_input("Ask something about data...")
+    st.write("📊 Compliance directly impacts anaemia reduction outcomes.")
+    st.write("⚠️ Regional disparities highlight implementation gaps.")
+    st.write("💡 Strengthening monitoring can improve health outcomes.")
+
+# -----------------------------
+# 🤖 ADVANCED AI POLICY ANALYST
+# -----------------------------
+st.subheader("🤖 AI Policy Advisor")
+
+question = st.text_input("Ask something about your data")
 
 if question:
-    if "compliance" in question.lower():
-        st.write("👉 Higher compliance improves outcomes significantly.")
-    elif "anaemia" in question.lower():
-        st.write("👉 Anaemia reduction improves with better fortification.")
-    else:
-        st.write("👉 Data suggests focusing on regional disparities.")
+
+    # Data context for AI
+    data_summary = filtered_df.describe().to_string()
+    sample_data = filtered_df.head(20).to_string()
+
+    prompt = f"""
+    You are a senior public policy analyst.
+
+    Use the dataset below to answer in DETAIL.
+
+    DATA SUMMARY:
+    {data_summary}
+
+    SAMPLE DATA:
+    {sample_data}
+
+    QUESTION:
+    {question}
+
+    Give answer in this format:
+
+    1. Key Insight (data-based)
+    2. Trend Analysis
+    3. Policy Interpretation
+    4. Recommendations
+
+    Make answer detailed, analytical, and professional.
+    """
+
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    st.write(response.choices[0].message.content)
 
 # -----------------------------
-# DOWNLOAD REPORT
+# Download Report
 # -----------------------------
-report = filtered_df.describe().to_csv().encode('utf-8')
+st.subheader("📥 Download Data")
 
-st.download_button("📥 Download Report", report, "report.csv", "text/csv")
+csv = filtered_df.to_csv(index=False).encode('utf-8')
+
+st.download_button(
+    "Download Filtered Data",
+    csv,
+    "data.csv",
+    "text/csv"
+)
 
 # -----------------------------
 # Footer
 # -----------------------------
-st.success("🚀 Elite Dashboard Ready!")
+st.success("🚀 GOD LEVEL DASHBOARD READY")
