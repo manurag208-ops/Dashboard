@@ -2,7 +2,30 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from openai import OpenAI
+# ✅ ADD THIS EXACTLY HERE
+st.markdown("""
+<style>
 
+/* Bigger multiselect bubbles */
+.stMultiSelect [data-baseweb="tag"] {
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+    border-radius: 20px !important;
+}
+
+/* Gradient premium color */
+.stMultiSelect [data-baseweb="tag"] {
+    background: linear-gradient(45deg, #6f42c1, #9b59b6) !important;
+    color: white !important;
+}
+
+/* Hover effect */
+.stMultiSelect [data-baseweb="tag"]:hover {
+    background: linear-gradient(45deg, #5a32a3, #8e44ad) !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 # -----------------------------
 # Page Config
 # -----------------------------
