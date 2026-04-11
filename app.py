@@ -208,4 +208,5 @@ st.download_button(
 # -----------------------------
 # Footer
 # -----------------------------
-st.success("🚀 GOD LEVEL DASHBOARD READY")
+st.success
+
